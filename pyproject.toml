@@ -11,6 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
+factory-base = "factory_intelligence.factory_base:main"
 factory-simulate = "factory_intelligence.simulator:main"
 factory-collect = "factory_intelligence.collector:main"
 
