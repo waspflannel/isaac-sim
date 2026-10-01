@@ -1,0 +1,26 @@
+# Project documentation stays local; keep the repository README.
+*.md
+*.mdx
+*.rst
+*.adoc
+*.pdf
+*.doc
+*.docx
+*.odt
+*.ppt
+*.pptx
+!/README.md
+docs/
+documents/
+plans/
+
+# Local credentials and environment settings.
+.env
+.env.*
+!.env.example
+
+# Local editor and operating-system files.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
