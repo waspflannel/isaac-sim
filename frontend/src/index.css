@@ -1,0 +1,17 @@
+:root { font-family: system-ui, sans-serif; color: #182d2a; background: #f4f5f0; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 800px; margin: 0 auto; padding: 64px 24px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
+h1 { font-size: clamp(2rem, 6vw, 3.5rem); letter-spacing: -.04em; margin: 20px 0; }
+h2 { font-size: 1.25rem; }
+p { line-height: 1.65; }
+section { margin: 40px 0; padding: 24px; background: white; border: 1px solid #ced7ce; border-radius: 8px; }
+dl { margin: 24px 0; }
+dl div { display: flex; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e3e8e1; }
+dd { margin: 0; font-weight: 600; }
+button { font: inherit; background: #245c4b; color: white; padding: 12px 16px; border: 0; border-radius: 4px; cursor: pointer; margin: 0 20px 12px 0; }
+button:hover { background: #183e33; }
+a { color: #245c4b; }
+:focus-visible { outline: 3px solid #b16c24; outline-offset: 4px; }
+.note { color: #50635e; font-size: .95rem; }

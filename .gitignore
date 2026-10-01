@@ -24,3 +24,33 @@ plans/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Dependencies, build output, and test caches.
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+build/
+coverage/
+
+# Local factory data, evidence, simulation downloads, and logs.
+.data/
+data/
+evidence/
+artifacts/
+isaac-runtime/
+asset-cache/
+*.db
+*.db-*
+*.sqlite*
+*.log
+
+# Keep reproducible dependency locks and example configuration tracked.
+!uv.lock
+!package-lock.json
