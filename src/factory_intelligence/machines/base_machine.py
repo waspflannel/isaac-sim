@@ -1,3 +1,4 @@
+import json
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -15,6 +16,7 @@ class Machine(ABC):
 
     def input_item(self, item):
         self.item_wait_queue.append(item)
+        self.log_activity(item, "queued")
         if not self.is_processing:
             self.is_processing = True
             self.env.process(self.run())
@@ -23,8 +25,10 @@ class Machine(ABC):
         try:
             while self.item_wait_queue:
                 item = self.item_wait_queue.popleft()
+                self.log_activity(item, "started")
                 yield self.env.timeout(self.item_processing_time)
                 self.process_item(item)
+                self.log_activity(item, "finished")
                 self.output_item(item)
         finally:
             self.is_processing = False
@@ -32,6 +36,18 @@ class Machine(ABC):
     @abstractmethod
     def process_item(self, item):
         """Apply this machine's change to the item."""
+
+    def log_activity(self, item, event):
+        print(
+            json.dumps(
+                {
+                    "time_seconds": self.env.now,
+                    "machine": type(self).__name__,
+                    "item_id": item.id,
+                    "event": event,
+                }
+            )
+        )
 
     def output_item(self, item):
         if self.next_machine is not None:

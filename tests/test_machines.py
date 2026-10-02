@@ -1,9 +1,40 @@
+import json
+
 import simpy
 
 from factory_intelligence.item import Item
 from factory_intelligence.machines.assembly_machine import AssemblyMachine
 from factory_intelligence.machines.kit_machine import KitMachine
 from factory_intelligence.machines.repair_machine import RepairMachine
+
+
+def test_activity_log_records_queue_waits_and_transfer_order(capsys):
+    env = simpy.Environment()
+    kit = KitMachine(env, item_processing_time=2)
+    assembly = AssemblyMachine(env, item_processing_time=5)
+    kit.connect(assembly)
+    kit.input_item(Item("A"))
+    kit.input_item(Item("B"))
+    env.run()
+
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert events == [
+        {"time_seconds": time, "machine": machine, "item_id": item, "event": event}
+        for time, machine, item, event in [
+            (0, "KitMachine", "A", "queued"),
+            (0, "KitMachine", "B", "queued"),
+            (0, "KitMachine", "A", "started"),
+            (2, "KitMachine", "A", "finished"),
+            (2, "AssemblyMachine", "A", "queued"),
+            (2, "KitMachine", "B", "started"),
+            (2, "AssemblyMachine", "A", "started"),
+            (4, "KitMachine", "B", "finished"),
+            (4, "AssemblyMachine", "B", "queued"),
+            (7, "AssemblyMachine", "A", "finished"),
+            (7, "AssemblyMachine", "B", "started"),
+            (12, "AssemblyMachine", "B", "finished"),
+        ]
+    ]
 
 
 def test_queue_is_fifo_and_linked_machines_work_concurrently():
