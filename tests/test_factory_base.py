@@ -2,14 +2,11 @@ from factory_intelligence.item import Item
 from factory_intelligence.main import run_factory
 
 
-def test_same_item_passes_through_all_machines_in_order():
-    item = Item("item-001")
-    assert item.completed_steps == []
-    assert run_factory(item) is item
-    assert item.id == "item-001"
-    assert item.completed_steps == ["kit", "assembly", "calibration", "test", "packing"]
-    other = Item("item-002")
-    assert other.completed_steps == []
-    run_factory(other)
-    assert other.completed_steps == item.completed_steps
-    assert other.completed_steps is not item.completed_steps
+def test_three_items_pass_through_all_machines_in_order():
+    items = [Item(str(index)) for index in range(3)]
+    originals = list(items)
+    assert run_factory(items) is items
+    for item, original in zip(items, originals, strict=True):
+        assert item is original
+        assert item.completed_steps == ["kit", "assembly", "calibration", "test", "packing"]
+    assert items[0].completed_steps is not items[1].completed_steps
