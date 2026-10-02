@@ -1,26 +1,37 @@
-import pytest
+import simpy
 
 from factory_intelligence.item import Item
 from factory_intelligence.machines.assembly_machine import AssemblyMachine
-from factory_intelligence.machines.base_machine import Machine
 from factory_intelligence.machines.kit_machine import KitMachine
 from factory_intelligence.machines.repair_machine import RepairMachine
 
 
-def test_machine_links_determine_the_route_and_last_machine_returns_item():
-    kit = KitMachine()
-    assembly = AssemblyMachine()
-    repair = RepairMachine()
+def test_queue_is_fifo_and_linked_machines_work_concurrently():
+    env = simpy.Environment()
+    kit = KitMachine(env, item_processing_time=2)
+    assembly = AssemblyMachine(env, item_processing_time=5)
+    repair = RepairMachine(env, item_processing_time=1)
     kit.connect(assembly)
     assembly.connect(repair)
-    item = Item("item-001")
-    assert kit.input_item(item) is item
-    assert item.completed_steps == ["kit", "assembly", "repair"]
-    assert RepairMachine().input_item(Item("single")).completed_steps == ["repair"]
-
-
-def test_invalid_machine_input_is_rejected():
-    with pytest.raises(TypeError, match="Item"):
-        KitMachine().input_item({})
-    with pytest.raises(TypeError):
-        Machine()
+    items = [Item(str(index)) for index in range(3)]
+    for item in items:
+        kit.input_item(item)
+    env.run(until=3)
+    assert items[0].completed_steps == ["kit"]
+    assert items[1].completed_steps == []
+    assert list(kit.item_wait_queue) == [items[2]]
+    assert kit.is_processing and assembly.is_processing
+    env.run(until=9)
+    assert items[0].completed_steps == ["kit", "assembly", "repair"]
+    assert items[1].completed_steps == ["kit"]
+    assert list(assembly.item_wait_queue) == [items[2]]
+    env.run()
+    assert env.now == 18
+    assert all(item.completed_steps == ["kit", "assembly", "repair"] for item in items)
+    assert all(not m.is_processing and not m.item_wait_queue for m in (kit, assembly, repair))
+    # An idle line can receive work again.
+    extra = Item("extra")
+    kit.input_item(extra)
+    env.run()
+    assert env.now == 26
+    assert extra.completed_steps == ["kit", "assembly", "repair"]

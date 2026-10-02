@@ -1,20 +1,33 @@
 from abc import ABC, abstractmethod
-
-from factory_intelligence.item import Item
+from collections import deque
 
 
 class Machine(ABC):
-    def __init__(self):
+    def __init__(self, env, item_processing_time):
+        self.env = env
+        self.item_processing_time = item_processing_time
+        self.item_wait_queue = deque()
+        self.is_processing = False
         self.next_machine = None
 
     def connect(self, next_machine):
         self.next_machine = next_machine
 
     def input_item(self, item):
-        if not isinstance(item, Item):
-            raise TypeError("machine input must be an Item")
-        self.process_item(item)
-        return self.output_item(item)
+        self.item_wait_queue.append(item)
+        if not self.is_processing:
+            self.is_processing = True
+            self.env.process(self.run())
+
+    def run(self):
+        try:
+            while self.item_wait_queue:
+                item = self.item_wait_queue.popleft()
+                yield self.env.timeout(self.item_processing_time)
+                self.process_item(item)
+                self.output_item(item)
+        finally:
+            self.is_processing = False
 
     @abstractmethod
     def process_item(self, item):
