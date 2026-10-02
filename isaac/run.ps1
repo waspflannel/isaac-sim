@@ -1,6 +1,7 @@
 param(
-    [ValidateSet('check', 'smoke', 'gui')]
-    [string]$Mode = 'smoke'
+    [ValidateSet('check', 'smoke', 'gui', 'factory')]
+    [string]$Mode = 'smoke',
+    [switch]$Headless
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,10 +18,18 @@ try {
             & '.\python.bat' (Join-Path $PSScriptRoot 'smoke.py') '--headless' '--output' (Join-Path $projectRoot '.data\isaac\smoke.json')
         }
         'gui' { & '.\isaac-sim.bat' }
+        'factory' {
+            $factoryArgs = @((Join-Path $PSScriptRoot 'factory.py'))
+            if ($Headless) { $factoryArgs += '--headless' }
+            & '.\python.bat' @factoryArgs
+        }
     }
     if ($LASTEXITCODE -ne 0) { throw "Isaac $Mode failed with exit code $LASTEXITCODE" }
     if ($Mode -eq 'smoke' -and -not (Test-Path (Join-Path $projectRoot '.data\isaac\smoke.json'))) {
         throw 'Isaac exited without completing the smoke check.'
+    }
+    if ($Mode -eq 'factory' -and -not (Test-Path (Join-Path $projectRoot '.data\isaac\factory\summary.json'))) {
+        throw 'Isaac exited without completing the factory batch.'
     }
 } finally {
     Pop-Location
