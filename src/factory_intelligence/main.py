@@ -7,14 +7,12 @@ from uuid import UUID, uuid4
 
 import simpy
 
-from factory_intelligence.machines import (
-    AssemblyMachine,
-    CalibrationMachine,
-    KitMachine,
-    PackingMachine,
-    RepairMachine,
-    TestMachine,
-)
+from factory_intelligence.machines.assembly_machine import AssemblyMachine
+from factory_intelligence.machines.calibration_machine import CalibrationMachine
+from factory_intelligence.machines.kit_machine import KitMachine
+from factory_intelligence.machines.packing_machine import PackingMachine
+from factory_intelligence.machines.repair_machine import RepairMachine
+from factory_intelligence.machines.test_machine import TestMachine
 
 
 class Factory:

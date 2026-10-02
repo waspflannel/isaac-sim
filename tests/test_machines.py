@@ -4,9 +4,10 @@ import json
 import pytest
 import simpy
 
-from factory_intelligence.factory_base import Factory
-from factory_intelligence.machines import AssemblyMachine, Machine
-from factory_intelligence.machines import TestMachine as EolMachine
+from factory_intelligence.machines.assembly_machine import AssemblyMachine
+from factory_intelligence.machines.base_machine import Machine
+from factory_intelligence.machines.test_machine import TestMachine as EolMachine
+from factory_intelligence.main import Factory
 
 
 def test_machine_capacity_and_repeat_attempts():

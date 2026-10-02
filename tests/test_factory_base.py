@@ -3,7 +3,7 @@ from uuid import UUID
 
 import pytest
 
-from factory_intelligence.factory_base import run_factory
+from factory_intelligence.main import run_factory
 
 
 def test_release_history_clock_and_reproduction(tmp_path):
