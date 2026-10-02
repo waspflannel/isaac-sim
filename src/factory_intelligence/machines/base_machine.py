@@ -1,14 +1,9 @@
 from abc import ABC, abstractmethod
 from collections import deque
-from math import isfinite
-
-from factory_intelligence.item import Item
 
 
 class Machine(ABC):
     def __init__(self, env, item_processing_time):
-        if not isfinite(item_processing_time) or item_processing_time <= 0:
-            raise ValueError("item_processing_time must be finite and positive")
         self.env = env
         self.item_processing_time = item_processing_time
         self.item_wait_queue = deque()
@@ -19,8 +14,6 @@ class Machine(ABC):
         self.next_machine = next_machine
 
     def input_item(self, item):
-        if not isinstance(item, Item):
-            raise TypeError("machine input must be an Item")
         self.item_wait_queue.append(item)
         if not self.is_processing:
             self.is_processing = True
