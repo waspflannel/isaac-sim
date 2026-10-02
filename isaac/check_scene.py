@@ -15,8 +15,8 @@ def main():
     sys.path[:0] = [str(usd), str(root / "src")]
     with os.add_dll_directory(str(usd / "bin")):
         import simpy
-        from factory_scene import STATIONS, FactoryScene
-        from pxr import Gf, Usd
+        from factory_scene import FactoryScene
+        from pxr import Gf, Usd, UsdGeom, UsdUtils
 
         from factory_intelligence.item import Item
         from factory_intelligence.main import setup_factory
@@ -27,13 +27,19 @@ def main():
             stage = Usd.Stage.CreateInMemory()
             items = [Item("A", 70), Item("B", 50), Item("C", 0)]
             scene = FactoryScene(stage, env, items, speed)
+            # Moving a machine in the scene also moves its queue and processing targets.
+            assembly = stage.GetPrimAtPath("/World/AssemblyMachine")
+            assembly.GetAttribute("xformOp:translate").Set(Gf.Vec3d(-2.5, 1, 0))
+            UsdGeom.Xformable(assembly).AddRotateZOp().Set(30)
+            assert scene.target("AssemblyMachine/ProcessPoint") == Gf.Vec3d(-2.5, 1, 0.98)
             visits = []
 
             def on_event(record, scene=scene, visits=visits):
                 scene.handle_event(record)
                 if record["event"] == "started":
-                    x, y = STATIONS[record["machine"]]
-                    assert scene.positions[record["item_id"]].Get() == Gf.Vec3d(x, y, 0.98)
+                    assert scene.positions[record["item_id"]].Get() == scene.target(
+                        record["machine"] + "/ProcessPoint"
+                    )
                     visits.append(record)
 
             machines = setup_factory(
@@ -50,12 +56,17 @@ def main():
             assert len(visits) == 20
             assert all(not m.is_processing and not m.item_wait_queue for m in machines)
             for item in items:
-                x = 5 if item.status == "packed" else 2.5
-                assert scene.positions[item.id].Get() == Gf.Vec3d(
-                    x + scene.offsets[item.id], -3, 0.98
+                output = "PackedOutput" if item.status == "packed" else "ScrapOutput"
+                assert scene.positions[item.id].Get() == scene.target(
+                    output + "/DropPoint", scene.offsets[item.id]
                 )
-            assert all(stage.GetPrimAtPath(f"/World/Machines/{name}") for name in STATIONS)
+            assert all(stage.GetPrimAtPath(f"/World/{type(m).__name__}") for m in machines)
             durations.append(env.now)
+        from factory_scene import SCENE_FILE
+
+        _, textures, missing = UsdUtils.ComputeAllDependencies(str(SCENE_FILE))
+        assert not missing
+        assert len(textures) == 6
         assert durations[1] > durations[0]
         print(f"Scene checks passed at both speeds: {durations}")
 

@@ -1,0 +1,1049 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World" (
+    apiSchemas = None
+)
+{
+    def Cube "Floor" (
+        apiSchemas = None
+    )
+    {
+        color3f[] primvars:displayColor = [(0.12, 0.15, 0.18)]
+        double size = 1
+        float3 xformOp:scale = (16, 10, 0.2)
+        double3 xformOp:translate = (0, 1, -0.1)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def DomeLight "Light" (
+        apiSchemas = ["LightAPI", "CollectionAPI:lightLink", "CollectionAPI:shadowLink"]
+    )
+    {
+        float inputs:intensity = 900
+    }
+
+    def Xform "KitMachine" (
+        apiSchemas = None
+        displayName = "Kit"
+    )
+    {
+        double3 xformOp:translate = (-5, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.6500000000000004, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.6500000000000004, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.32, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.32, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/KitMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.12, 1.92), (0.75, -0.12, 1.92), (0.75, -0.12, 2.24), (-0.75, -0.12, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/KitMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/KitMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Kit.png@
+                float2 inputs:st.connect = </World/KitMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "AssemblyMachine" (
+        apiSchemas = None
+        displayName = "Assembly"
+    )
+    {
+        double3 xformOp:translate = (-2.5, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.6499999999999999, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.6499999999999999, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.32, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.32, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/AssemblyMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.12, 1.92), (0.75, -0.12, 1.92), (0.75, -0.12, 2.24), (-0.75, -0.12, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/AssemblyMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/AssemblyMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Assembly.png@
+                float2 inputs:st.connect = </World/AssemblyMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "CalibrationMachine" (
+        apiSchemas = None
+        displayName = "Calibration"
+    )
+    {
+        double3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.65, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.65, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.32, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.32, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/CalibrationMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.12, 1.92), (0.75, -0.12, 1.92), (0.75, -0.12, 2.24), (-0.75, -0.12, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/CalibrationMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/CalibrationMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Calibration.png@
+                float2 inputs:st.connect = </World/CalibrationMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "TestMachine" (
+        apiSchemas = None
+        displayName = "Test"
+    )
+    {
+        double3 xformOp:translate = (2.5, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.6499999999999999, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.6499999999999999, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.32, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.32, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/TestMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.12, 1.92), (0.75, -0.12, 1.92), (0.75, -0.12, 2.24), (-0.75, -0.12, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/TestMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/TestMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Test.png@
+                float2 inputs:st.connect = </World/TestMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "PackingMachine" (
+        apiSchemas = None
+        displayName = "Packing"
+    )
+    {
+        double3 xformOp:translate = (5, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.6500000000000004, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.6500000000000004, 0.32, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.32, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.32, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/PackingMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.12, 1.92), (0.75, -0.12, 1.92), (0.75, -0.12, 2.24), (-0.75, -0.12, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/PackingMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/PackingMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Packing.png@
+                float2 inputs:st.connect = </World/PackingMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "RepairMachine" (
+        apiSchemas = None
+        displayName = "Repair"
+    )
+    {
+        double3 xformOp:translate = (2.5, 3, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Table" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.6, 1, 0.8)
+            double3 xformOp:translate = (0, 0, 0.4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Worktop" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.5, 0.56, 0.6)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 1.1, 0.08)
+            double3 xformOp:translate = (0, 0, 0.82)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Left" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (-0.6499999999999999, 0.31999999999999984, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Right" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.1, 0.15, 0.8)
+            double3 xformOp:translate = (0.6499999999999999, 0.31999999999999984, 1.25)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Beam" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (1.4, 0.15, 0.12)
+            double3 xformOp:translate = (0, 0.31999999999999984, 1.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Status" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.38, 0.48)]
+            double size = 1
+            float3 xformOp:scale = (0.22, 0.22, 0.18)
+            double3 xformOp:translate = (0, 0.31999999999999984, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Queue" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.24, 0.27, 0.3)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.5, 0.2)
+            double3 xformOp:translate = (0, -1.2, 0.72)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Mesh "Label" (
+            apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] faceVertexCounts = [4]
+            int[] faceVertexIndices = [0, 1, 2, 3]
+            rel material:binding = </World/RepairMachine/LabelMaterial>
+            point3f[] points = [(-0.75, -0.119999886, 1.92), (0.75, -0.119999886, 1.92), (0.75, -0.119999886, 2.24), (-0.75, -0.119999886, 2.24)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "vertex"
+            )
+            uniform token subdivisionScheme = "none"
+        }
+
+        def Material "LabelMaterial" (
+            apiSchemas = None
+        )
+        {
+            token outputs:surface.connect = </World/RepairMachine/LabelMaterial/Surface.outputs:surface>
+
+            def Shader "Surface" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </World/RepairMachine/LabelMaterial/Texture.outputs:rgb>
+                token outputs:surface
+            }
+
+            def Shader "Texture" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @labels/Repair.png@
+                float2 inputs:st.connect = </World/RepairMachine/LabelMaterial/UV.outputs:result>
+                color3f outputs:rgb
+            }
+
+            def Shader "UV" (
+                apiSchemas = ["NodeDefAPI"]
+            )
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+        }
+
+        def Xform "ProcessPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "QueuePoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, -1.2, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Cube "TransportLane" (
+        apiSchemas = None
+    )
+    {
+        color3f[] primvars:displayColor = [(0.25, 0.3, 0.32)]
+        double size = 1
+        float3 xformOp:scale = (13, 0.5, 0.15)
+        double3 xformOp:translate = (0, -2, 0.6)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def "Items" (
+        apiSchemas = None
+    )
+    {
+        def Cube "Item_0" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.2, 0.65, 0.95)]
+            double size = 1
+            float3 xformOp:scale = (0.35, 0.3, 0.25)
+            double3 xformOp:translate = (-6.5, -1, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Item_1" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.2, 0.65, 0.95)]
+            double size = 1
+            float3 xformOp:scale = (0.35, 0.3, 0.25)
+            double3 xformOp:translate = (-6.5, -0.5, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Item_2" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.2, 0.65, 0.95)]
+            double size = 1
+            float3 xformOp:scale = (0.35, 0.3, 0.25)
+            double3 xformOp:translate = (-6.5, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    def Camera "Camera" (
+        apiSchemas = None
+    )
+    {
+        float2 clippingRange = (0.1, 1000)
+        float focalLength = 30
+        matrix4d xformOp:transform = ( (0.8247288518459779, 0.5655283555515278, 5.551115123125783e-17, 0), (-0.31144555929841566, 0.45419144064352274, 0.8346926373459026, -0), (0.47204235458919597, -0.6883951004425773, 0.5507160803540618, 0), (12.000000000000002, -17.000000000000004, 13.999999999999998, 1) )
+        uniform token[] xformOpOrder = ["xformOp:transform"]
+    }
+
+    def Xform "PackedOutput" (
+        apiSchemas = None
+    )
+    {
+        double3 xformOp:translate = (5, -3, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Platform" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.15, 0.5, 0.25)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.7, 0.3)
+            double3 xformOp:translate = (0, 0, 0.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Xform "DropPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "ScrapOutput" (
+        apiSchemas = None
+    )
+    {
+        double3 xformOp:translate = (2.5, -3, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cube "Platform" (
+            apiSchemas = None
+        )
+        {
+            color3f[] primvars:displayColor = [(0.6, 0.15, 0.12)]
+            double size = 1
+            float3 xformOp:scale = (1.7, 0.7, 0.3)
+            double3 xformOp:translate = (0, 0, 0.65)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Xform "DropPoint" (
+            apiSchemas = None
+        )
+        {
+            double3 xformOp:translate = (0, 0, 0.98)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+}
+
