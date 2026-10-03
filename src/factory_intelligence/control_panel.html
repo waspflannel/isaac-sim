@@ -39,7 +39,7 @@ td,th{padding:12px 10px;border-bottom:1px solid var(--line)}td:first-child,th:fi
 <div><span class="number" id="rate">—</span><small>Shipped / sim minute</small></div>
 <div><span class="number" id="scrap">—</span><small>Scrapped</small></div>
 </div>
-<p class="legend">Highest processing utilization: <span id="bottleneck">Waiting for production</span> · Repaired: <span id="repaired">0</span></p>
+<p class="legend">Highest processing utilization: <span id="bottleneck">Waiting for production</span> · Sent through rework: <span id="repaired">0</span></p>
 </section>
 <aside><h2>Production controls</h2><form id="controls">
 <label for="feed">Feed interval per line (seconds)</label><input id="feed" type="number" min=".1" max="60" step=".1" value="4" required>
@@ -49,6 +49,10 @@ td,th{padding:12px 10px;border-bottom:1px solid var(--line)}td:first-child,th:fi
 <button type="button" class="secondary" id="drain">Stop feeding &amp; finish all items</button>
 <p id="message" role="status">Changes affect new feed cycles and ongoing transport. Existing items finish normally.</p>
 </aside></div>
+<section class="details" id="robot-section" hidden><h2>Robotic handling</h2>
+<p class="legend"><span id="robot-count">0</span> articulated arms · <span id="robot-active">0</span> working · <span id="robot-placements">0</span> verified placements. Each placement requires attachment, lift, release, and a settled item.</p>
+<div class="table-scroll"><table><thead><tr><th>Robot cell</th><th>Motion phase</th><th>Physical grasps</th><th>Completed placements</th></tr></thead><tbody id="robot-activity"></tbody></table></div>
+</section>
 <section class="details"><h2>Station activity</h2><p class="legend">Queue = waiting items / capacity. Bars show cumulative processing utilization; blocked means waiting for downstream space.</p>
 <div class="table-scroll"><table><thead><tr><th>Line</th><th>Kit</th><th>Assembly</th><th>Calibration</th><th>Test</th><th>Packing</th></tr></thead><tbody id="stations"></tbody></table></div>
 <div class="table-scroll" style="margin-top:24px"><table><thead><tr><th>Shared service</th><th>Repair</th><th>Reinspection</th></tr></thead><tbody id="repairs"></tbody></table></div>
@@ -69,9 +73,14 @@ async function refresh(){
   $('bottleneck').textContent=s.bottleneck.replaceAll('/',' / ');$('repaired').textContent=s.repaired;
   $('stations').innerHTML=Array.from({length:8},(_,i)=>{let name='Line'+String(i+1).padStart(2,'0');return `<tr><td>${name}</td>${kinds.map(k=>cell(s.machines[name+'/'+k])).join('')}</tr>`}).join('');
   $('repairs').innerHTML=[1,2].map(n=>`<tr><td>Repair cell ${n}</td>${['RepairMachine','TestMachine'].map(k=>cell(s.machines['Repair'+n+'/'+k])).join('')}</tr>`).join('');
+  const robots=Object.entries(s.robots||{});$('robot-section').hidden=!robots.length;
+  $('robot-count').textContent=robots.length;$('robot-active').textContent=robots.filter(([,r])=>r.phase!=='IDLE').length;
+  $('robot-placements').textContent=robots.reduce((total,[,r])=>total+r.completed,0);
+  $('robot-activity').innerHTML=robots.map(([name,r])=>`<tr><td>${name.replace('_',' / ')}</td><td>${r.phase.replaceAll('_',' ').toLowerCase()}</td><td>${r.attachments}</td><td>${r.completed}</td></tr>`).join('');
   if(!initialized){$('feed').value=s.controls.feed_interval;$('speed').value=s.transport_speed;$('lines').querySelectorAll('input').forEach(n=>n.checked=s.controls.enabled_lines.includes(Number(n.value)));initialized=true}
   if(s.status==='draining'){document.querySelectorAll('button').forEach(b=>b.disabled=true);$('message').textContent='Feed stopped. Remaining items are completing their routes.'}
-  if(!imageLoaded){const img=new Image();img.onload=()=>{$('scene').src=img.src;$('scene').hidden=false;$('caption').textContent='Isaac scene capture · telemetry below is live';imageLoaded=true};img.src='/scene.png'}
+  if(s.rendering===false){$('caption').textContent='Physics run · rendering disabled'}
+  else if(!imageLoaded){const img=new Image();img.onload=()=>{$('scene').src=img.src;$('scene').hidden=false;$('caption').textContent='Isaac scene capture · telemetry below is live';imageLoaded=true};img.src='/scene.png'}
  }catch{$('connection').textContent='Disconnected · last received values shown'}
 }
 async function send(command){
