@@ -131,7 +131,9 @@ class Production:
         self.completed.append(item)
         del self.active[item.id]
         self.space.put(1)
-        self.emit({"event": "shipped", "item_id": item.id, "status": item.status})
+        self.emit(
+            {"event": "shipped", "item_id": item.id, "status": item.status, "line": item.line}
+        )
 
     def snapshot(self):
         stations = {}
