@@ -13,8 +13,8 @@ from factory_intelligence.machines.repair_machine import RepairMachine
 from factory_intelligence.machines.test_machine import TestMachine
 
 
-def run_factory(items):
-    env = simpy.Environment()
+def setup_factory(env, items, *, transfer=None, on_event=None, processing_time_scale=1):
+    """Wire the same production line for CPU runs or an externally stepped scene."""
     kit = KitMachine(env, item_processing_time=35)
     assembly = AssemblyMachine(env, item_processing_time=45)
     calibration = CalibrationMachine(env, item_processing_time=60)
@@ -29,8 +29,20 @@ def run_factory(items):
     testing.repair_machine = repair
     repair.connect(testing)
 
+    machines = [kit, assembly, calibration, testing, packing, repair]
+    for machine in machines:
+        machine.transfer = transfer
+        machine.on_event = on_event
+        machine.item_processing_time *= processing_time_scale
+
     for item in items:
         kit.input_item(item)
+    return machines
+
+
+def run_factory(items):
+    env = simpy.Environment()
+    setup_factory(env, items)
     env.run()
     print(
         json.dumps(

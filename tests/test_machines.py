@@ -37,6 +37,28 @@ def test_activity_log_records_queue_waits_and_transfer_order(capsys):
     ]
 
 
+def test_machine_waits_for_scene_arrival_before_processing():
+    env = simpy.Environment()
+    machine = KitMachine(env, item_processing_time=2)
+    arrival = env.event()
+    events = []
+    machine.transfer = lambda item, station: arrival
+    machine.on_event = events.append
+    item = Item("in-transit")
+    machine.input_item(item)
+    env.run(until=10)
+    assert item.completed_steps == []
+    assert [event["event"] for event in events] == ["queued"]
+    arrival.succeed()
+    env.run()
+    assert item.completed_steps == ["kit"]
+    assert [(event["event"], event["time_seconds"]) for event in events] == [
+        ("queued", 0),
+        ("started", 10),
+        ("finished", 12),
+    ]
+
+
 def test_queue_is_fifo_and_linked_machines_work_concurrently():
     env = simpy.Environment()
     kit = KitMachine(env, item_processing_time=2)

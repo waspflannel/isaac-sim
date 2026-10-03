@@ -10,6 +10,8 @@ class Machine(ABC):
         self.item_wait_queue = deque()
         self.is_processing = False
         self.next_machine = None
+        self.transfer = None
+        self.on_event = None
 
     def connect(self, next_machine):
         self.next_machine = next_machine
@@ -25,6 +27,8 @@ class Machine(ABC):
         try:
             while self.item_wait_queue:
                 item = self.item_wait_queue.popleft()
+                if self.transfer is not None:
+                    yield self.transfer(item, self)
                 self.log_activity(item, "started")
                 yield self.env.timeout(self.item_processing_time)
                 self.process_item(item)
@@ -38,16 +42,15 @@ class Machine(ABC):
         """Apply this machine's change to the item."""
 
     def log_activity(self, item, event):
-        print(
-            json.dumps(
-                {
-                    "time_seconds": self.env.now,
-                    "machine": type(self).__name__,
-                    "item_id": item.id,
-                    "event": event,
-                }
-            )
-        )
+        record = {
+            "time_seconds": self.env.now,
+            "machine": type(self).__name__,
+            "item_id": item.id,
+            "event": event,
+        }
+        print(json.dumps(record))
+        if self.on_event is not None:
+            self.on_event(record)
 
     def output_item(self, item):
         if self.next_machine is not None:
