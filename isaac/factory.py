@@ -43,7 +43,8 @@ def parse_args():
 def start_app():
     args = parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    (args.output / "summary.json").unlink(missing_ok=True)
+    for name in ("summary.json", "live.json", "Camera.png", "FloorCamera.png", "RepairCamera.png"):
+        (args.output / name).unlink(missing_ok=True)
 
     from isaacsim import SimulationApp
 

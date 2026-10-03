@@ -1,7 +1,9 @@
 param(
     [ValidateSet('check', 'smoke', 'gui', 'factory')]
     [string]$Mode = 'smoke',
-    [switch]$Headless
+    [switch]$Headless,
+    [switch]$Continuous,
+    [switch]$Realtime
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,6 +23,8 @@ try {
         'factory' {
             $factoryArgs = @((Join-Path $PSScriptRoot 'factory.py'))
             if ($Headless) { $factoryArgs += '--headless' }
+            if ($Continuous) { $factoryArgs += '--continuous' }
+            if ($Realtime) { $factoryArgs += '--realtime' }
             & '.\python.bat' @factoryArgs
         }
     }
