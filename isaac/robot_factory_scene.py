@@ -21,6 +21,7 @@ class RobotFactoryScene:
         self.items, self.pending, self.slots, self.moves = {}, {}, {}, {}
         self.peak_moving = 0
         self.cells = {}
+        self.journal = None
         stations = list(stage.GetPrimAtPath("/World/Stations").GetChildren())
         for station in stations:
             path = station.GetPath().pathString
@@ -113,7 +114,9 @@ class RobotFactoryScene:
             if cell:
                 self.set_guided(item.id, False)
                 yield self.env.timeout(0.25)
-                yield cell.move(self.items[item.id][0], self.target(station + "/Process"), 0.04)
+                yield self.env.process(
+                    self.handle(cell, item, machine, "load", station + "/Process")
+                )
             else:
                 yield self.move(item.id, self.target(station + "/Process"))
 
@@ -124,11 +127,34 @@ class RobotFactoryScene:
             station = self.station_path(machine.station_id)
             cell = self.cells.get(machine.station_id.replace("/", "_"))
             if cell:
-                yield cell.move(self.items[item.id][0], self.target(station + "/Output"), 0.04)
+                yield self.env.process(
+                    self.handle(cell, item, machine, "unload", station + "/Output")
+                )
             else:
                 yield self.move(item.id, self.target(station + "/Output"))
 
         return self.env.process(release())
+
+    def handle(self, cell, item, machine, action, target):
+        context = {
+            "item_id": item.id,
+            "action": action,
+            "handling_id": f"{item.id}:{machine.station_id}:{action}:{self.env.now}",
+        }
+        cell.edge_context = context
+        if self.journal:
+            self.journal.emit("handling.started", machine.station_id, self.env.now, **context)
+        yield cell.move(self.items[item.id][0], self.target(target), 0.04)
+        if self.journal:
+            evidence = {key: value for key, value in cell.history[-1].items() if key != "item"}
+            evidence["duration_seconds"] = evidence.pop("seconds")
+            self.journal.emit(
+                "handling.completed",
+                machine.station_id,
+                self.env.now,
+                **context,
+                **evidence,
+            )
 
     def ship(self, item):
         target = (
@@ -151,7 +177,19 @@ class RobotFactoryScene:
                     positions=[current + (target - current) * (self.speed * dt / distance)]
                 )
         for cell in self.cells.values():
-            cell.step(dt)
+            try:
+                cell.step(dt)
+            except (RuntimeError, TimeoutError) as error:
+                if self.journal:
+                    station = cell.path.rsplit("/", 1)[-1].replace("_", "/", 1)
+                    self.journal.emit(
+                        "handling.failed",
+                        station,
+                        self.env.now,
+                        **cell.edge_context,
+                        reason=str(error),
+                    )
+                raise
 
     def snapshot(self):
         return {name: cell.snapshot() for name, cell in self.cells.items()}

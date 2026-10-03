@@ -11,6 +11,7 @@ from isaacsim.core.simulation_manager import SimulationManager
 from robot_factory_scene import RobotFactoryScene
 
 from factory_intelligence.control_panel import ControlPanel
+from factory_intelligence.edge.journal import FactoryJournal
 from factory_intelligence.production import Production
 
 STEP = 1 / 60
@@ -20,7 +21,15 @@ def main(app, args):
     SimulationManager.setup_simulation(dt=STEP, device="cpu")
     env = simpy.Environment()
     scene = RobotFactoryScene(omni.usd.get_context().get_stage(), env, args.transport_speed)
-    factory = Production(env, transfer=scene.transfer, on_event=scene.handle_event, ship=scene.ship)
+    journal = FactoryJournal(args.journal)
+
+    def observe(event):
+        scene.handle_event(event)
+        journal.observe(event)
+
+    factory = Production(env, transfer=scene.transfer, on_event=observe, ship=scene.ship)
+    journal.factory = factory
+    scene.journal = journal
     factory.feed_interval = 12
     for machine in factory.machines.values():
         machine.unload = scene.unload
@@ -38,8 +47,20 @@ def main(app, args):
     for _ in range(30):
         app.update()
     print(f"Started {len(scene.cells)} articulated production robots", flush=True)
-    with closing(ControlPanel(args.output, args.dashboard_port)) as panel:
-        run_factory(app, args, env, scene, factory, panel)
+    with closing(journal), closing(ControlPanel(args.output, args.dashboard_port)) as panel:
+        journal.emit(
+            "run.started",
+            "Factory",
+            env.now,
+            capabilities=["operations", "queues", "quality_score", "physical_handling"],
+            unavailable=["component_lots", "electrical_measurements", "process_revisions"],
+        )
+        try:
+            run_factory(app, args, env, scene, factory, panel)
+        except Exception as error:
+            journal.emit("run.aborted", "Factory", env.now, reason=type(error).__name__)
+            raise
+        journal.emit("run.completed", "Factory", env.now)
 
 
 def run_factory(app, args, env, scene, factory, panel):
@@ -83,6 +104,8 @@ def run_factory(app, args, env, scene, factory, panel):
         if frames % 60 == 0:
             panel.publish(factory, scene, robots=scene.snapshot(), rendering=not args.minimal)
             (args.output / "live.json").write_text(json.dumps(panel.snapshot), encoding="utf-8")
+        if frames % 300 == 0:
+            scene.journal.snapshot()
         if frames % 600 == 0:
             print(
                 f"t={env.now:.0f} wip={len(factory.active)} packed={factory.counts['packed']} "
