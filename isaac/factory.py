@@ -15,11 +15,20 @@ def parse_args():
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--layout", choices=("large", "demo"), default="large")
     parser.add_argument("--duration", type=float, default=240)
+    parser.add_argument(
+        "--continuous", action="store_true", help="Feed until drained from the panel"
+    )
+    parser.add_argument(
+        "--realtime", action="store_true", help="Pace headless runs for live control"
+    )
+    parser.add_argument("--dashboard-port", type=int, default=8766)
     parser.add_argument("--processing-time-scale", type=float, default=0.05)
     parser.add_argument("--transport-speed", type=float, default=4.0)
     parser.add_argument("--max-seconds", type=float, default=1500)
     parser.add_argument("--output", type=Path, default=ROOT / ".data" / "isaac" / "factory")
     args = parser.parse_args()
+    if not 1 <= args.dashboard_port <= 65535:
+        parser.error("Dashboard port must be between 1 and 65535")
     for value in (
         args.processing_time_scale,
         args.transport_speed,

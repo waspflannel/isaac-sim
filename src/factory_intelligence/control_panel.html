@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Factory Intelligence · Operations</title>
+<style>
+:root{color-scheme:light;--ink:#17352f;--muted:#63776f;--paper:#f3f4ed;--line:#d4ded5;--green:#006f53}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px system-ui,sans-serif}
+header{padding:24px 4vw;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.wordmark{font-size:20px;font-weight:750;letter-spacing:-.7px}small,.eyebrow{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+main{max-width:1500px;margin:auto;padding:38px 4vw}h1{font-size:44px;letter-spacing:-2px;margin:8px 0 25px;line-height:1.1}h2{font-size:20px;letter-spacing:-.5px;margin:0 0 18px}
+.overview{display:grid;grid-template-columns:1fr 300px;gap:32px}.scene{background:#dbe4df;min-height:200px;aspect-ratio:1.6;position:relative;overflow:hidden}
+.scene img{width:100%;height:100%;object-fit:cover}.caption{position:absolute;bottom:12px;left:12px;background:var(--paper);padding:7px 10px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);padding:24px 0;border-bottom:1px solid var(--line);gap:18px}
+.number{font-size:30px;font-weight:600;letter-spacing:-1px;display:block;margin-bottom:5px;font-variant-numeric:tabular-nums}
+aside{border-left:1px solid var(--line);padding-left:28px}label{display:block;margin:18px 0 7px;font-size:13px}
+input[type=number]{width:100%;padding:10px;border:1px solid #91a79c;background:transparent;color:var(--ink);font:inherit}
+.lines{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.lines label{margin:0;padding:8px 0;font-size:12px}
+button{padding:11px 15px;font:600 13px system-ui;cursor:pointer;border:1px solid var(--green);background:var(--green);color:white;margin-top:18px}
+button.secondary{background:transparent;color:var(--ink);border-color:#91a79c;width:100%}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible{outline:3px solid #dc9d37;outline-offset:3px}
+#message{min-height:40px;font-size:12px;line-height:1.5;color:var(--muted)}.details{margin-top:32px}
+.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:500}
+td,th{padding:12px 10px;border-bottom:1px solid var(--line)}td:first-child,th:first-child{padding-left:0}
+.station{min-width:135px}.state{display:block;font-size:11px;color:var(--muted);margin-top:4px}.meter{height:3px;background:#dbe3dc;margin-top:7px}.fill{height:100%;background:var(--green);transition:width .5s}
+.blocked{color:#a9441d}.legend{font-size:12px;color:var(--muted);margin-bottom:16px}#connection{font-size:12px}#bottleneck{font-weight:600}
+@media(max-width:800px){.overview{grid-template-columns:1fr}aside{border-left:0;padding:24px 0;border-top:1px solid var(--line)}h1{font-size:34px}.stats{grid-template-columns:repeat(2,1fr)}header{gap:20px}.scene{min-height:180px}}
+@media(prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="wordmark">Factory Intelligence<span style="color:#749284"> / Operations</span></div><span id="connection" role="status">Connecting…</span></header>
+<main>
+<div class="eyebrow">Production floor · 8 lines · 44 stations</div><h1>A view of everything in motion.</h1>
+<div class="overview"><section aria-label="Factory overview">
+<div class="scene"><img id="scene" alt="Rendered overhead view of the operating factory" hidden><span class="caption" id="caption">Scene capture available during the run</span></div>
+<div class="stats">
+<div><span class="number" id="packed">—</span><small>Units shipped</small></div>
+<div><span class="number" id="wip">—</span><small>Work in progress</small></div>
+<div><span class="number" id="rate">—</span><small>Shipped / sim minute</small></div>
+<div><span class="number" id="scrap">—</span><small>Scrapped</small></div>
+</div>
+<p class="legend">Highest processing utilization: <span id="bottleneck">Waiting for production</span> · Repaired: <span id="repaired">0</span></p>
+</section>
+<aside><h2>Production controls</h2><form id="controls">
+<label for="feed">Feed interval per line (seconds)</label><input id="feed" type="number" min=".1" max="60" step=".1" value="4" required>
+<label for="speed">Transport speed (m/s)</label><input id="speed" type="number" min=".1" max="20" step=".1" value="4" required>
+<label>Lines accepting new items</label><div class="lines" id="lines"></div>
+<button type="submit">Apply changes</button></form>
+<button type="button" class="secondary" id="drain">Stop feeding &amp; finish all items</button>
+<p id="message" role="status">Changes affect new feed cycles and ongoing transport. Existing items finish normally.</p>
+</aside></div>
+<section class="details"><h2>Station activity</h2><p class="legend">Queue = waiting items / capacity. Bars show cumulative processing utilization; blocked means waiting for downstream space.</p>
+<div class="table-scroll"><table><thead><tr><th>Line</th><th>Kit</th><th>Assembly</th><th>Calibration</th><th>Test</th><th>Packing</th></tr></thead><tbody id="stations"></tbody></table></div>
+<div class="table-scroll" style="margin-top:24px"><table><thead><tr><th>Shared service</th><th>Repair</th><th>Reinspection</th></tr></thead><tbody id="repairs"></tbody></table></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const kinds=['KitMachine','AssemblyMachine','CalibrationMachine','TestMachine','PackingMachine'];
+for(let n=1;n<=8;n++)$('lines').insertAdjacentHTML('beforeend',`<label><input type="checkbox" value="${n}" checked> ${String(n).padStart(2,'0')}</label>`);
+const cell=m=>`<td class="station"><span class="${m.state==='blocked'?'blocked':''}">${m.queue}/${m.capacity} queued · ${Math.round(m.utilization*100)}%</span><span class="state">${m.state} · ${m.processed} processed</span><div class="meter"><div class="fill" style="width:${m.utilization*100}%"></div></div></td>`;
+let initialized=false,imageLoaded=false;
+async function refresh(){
+ try{
+  const response=await fetch('/snapshot');if(!response.ok)throw Error('Unavailable');
+  const s=await response.json();if(!s.machines)return;
+  $('connection').textContent=`${s.status} · ${s.time_seconds.toFixed(0)} simulated seconds`;
+  $('packed').textContent=s.packed;$('wip').textContent=s.wip;$('rate').textContent=s.throughput_per_minute.toFixed(1);$('scrap').textContent=s.scrapped;
+  $('bottleneck').textContent=s.bottleneck.replaceAll('/',' / ');$('repaired').textContent=s.repaired;
+  $('stations').innerHTML=Array.from({length:8},(_,i)=>{let name='Line'+String(i+1).padStart(2,'0');return `<tr><td>${name}</td>${kinds.map(k=>cell(s.machines[name+'/'+k])).join('')}</tr>`}).join('');
+  $('repairs').innerHTML=[1,2].map(n=>`<tr><td>Repair cell ${n}</td>${['RepairMachine','TestMachine'].map(k=>cell(s.machines['Repair'+n+'/'+k])).join('')}</tr>`).join('');
+  if(!initialized){$('feed').value=s.controls.feed_interval;$('speed').value=s.transport_speed;$('lines').querySelectorAll('input').forEach(n=>n.checked=s.controls.enabled_lines.includes(Number(n.value)));initialized=true}
+  if(s.status==='draining'){document.querySelectorAll('button').forEach(b=>b.disabled=true);$('message').textContent='Feed stopped. Remaining items are completing their routes.'}
+  if(!imageLoaded){const img=new Image();img.onload=()=>{$('scene').src=img.src;$('scene').hidden=false;$('caption').textContent='Isaac scene capture · telemetry below is live';imageLoaded=true};img.src='/scene.png'}
+ }catch{$('connection').textContent='Disconnected · last received values shown'}
+}
+async function send(command){
+ try{const r=await fetch('/controls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(command)});const body=await r.json();if(!r.ok)throw Error(body.error);$('message').textContent='Changes queued for the next simulation frame.'}
+ catch(e){$('message').textContent=e.message}
+}
+$('controls').onsubmit=e=>{e.preventDefault();send({feed_interval:Number($('feed').value),transport_speed:Number($('speed').value),enabled_lines:[...$('lines').querySelectorAll('input:checked')].map(n=>Number(n.value))})};
+$('drain').onclick=()=>send({drain:true});
+refresh();setInterval(refresh,1000);
+</script>
+</body></html>

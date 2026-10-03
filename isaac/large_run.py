@@ -2,14 +2,17 @@
 
 import asyncio
 import json
+from contextlib import closing
 from time import perf_counter, sleep
 
+import carb
 import omni.usd
 import simpy
 from isaacsim.core.api import World
 from large_scene import LargeScene
 from omni.kit.viewport.utility import capture_viewport_to_file, get_active_viewport
 
+from factory_intelligence.control_panel import ControlPanel
 from factory_intelligence.production import Production
 
 STEP = 1 / 30
@@ -36,6 +39,7 @@ def capture_views(app, world, output):
 
 
 def main(app, args):
+    carb.settings.get_settings().set_int("/persistent/app/viewport/displayOptions", 0)
     world = World(physics_dt=STEP, rendering_dt=STEP, stage_units_in_meters=1)
     env = simpy.Environment()
     scene = LargeScene(omni.usd.get_context().get_stage(), env, args.transport_speed)
@@ -44,17 +48,28 @@ def main(app, args):
     viewport.set_texture_resolution((1440, 900))
     viewport.set_active_camera("/World/Camera")
     world.reset()
+    with closing(ControlPanel(args.output, args.dashboard_port)) as panel:
+        print(f"Control panel: http://127.0.0.1:{args.dashboard_port}", flush=True)
+        run_factory(app, args, world, env, scene, factory, panel)
+
+
+def run_factory(app, args, world, env, scene, factory, panel):
     started = perf_counter()
     peak_wip = 0
     captured = False
     frames = 0
-    while env.now < args.duration or factory.active:
+    drain_started = None
+    while factory.running or factory.active:
+        panel.apply(factory, scene)
         if not app.is_running():
             raise RuntimeError("Factory closed before the run completed")
-        if env.now >= args.max_seconds:
-            raise RuntimeError("Factory exceeded its drain time limit")
-        if env.now >= args.duration:
+        if not args.continuous and env.now >= args.duration:
             factory.running = False
+        if not factory.running:
+            if drain_started is None:
+                drain_started = env.now
+            if env.now - drain_started >= args.max_seconds:
+                raise RuntimeError("Factory exceeded its drain time limit")
         frame_start = perf_counter()
         env.run(until=env.now + STEP)
         scene.step(STEP)
@@ -66,7 +81,8 @@ def main(app, args):
         frames += 1
         peak_wip = max(peak_wip, len(factory.active))
         if frames % 30 == 0:
-            snapshot = factory.snapshot()
+            panel.publish(factory, scene)
+            snapshot = panel.snapshot
             (args.output / "live.json").write_text(json.dumps(snapshot), encoding="utf-8")
         if not captured and env.now >= min(120, args.duration / 2):
             capture_views(app, world, args.output)
@@ -76,13 +92,15 @@ def main(app, args):
                 f"t={env.now:.0f}s wip={len(factory.active)} packed={factory.counts['packed']}",
                 flush=True,
             )
-        if not args.headless:
+        if not args.headless or args.realtime:
             sleep(max(0, STEP - (perf_counter() - frame_start)))
+    panel.publish(factory, scene)
     summary = {
         **factory.snapshot(),
         "wall_seconds": perf_counter() - started,
         "peak_wip": peak_wip,
         "peak_moving": scene.peak_moving,
+        "transport_speed": scene.speed,
         "transport": "guided lane movement",
     }
     assert summary["introduced"] == summary["packed"] + summary["scrapped"]
