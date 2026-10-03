@@ -13,6 +13,7 @@ class Machine(ABC):
         self.is_processing = False
         self.next_machine = None
         self.transfer = None
+        self.unload = None
         self.on_event = None
         self.station_id = type(self).__name__
         self.queue_capacity = None
@@ -52,6 +53,8 @@ class Machine(ABC):
                 self.log_activity(item, "started")
                 yield self.env.timeout(self.item_processing_time)
                 self.process_item(item)
+                if self.unload is not None:
+                    yield self.unload(item, self)
                 self.log_activity(item, "finished")
                 delivery = self.output_item(item)
                 if isinstance(delivery, simpy.Event):
