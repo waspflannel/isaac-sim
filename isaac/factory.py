@@ -13,7 +13,11 @@ sys.path.insert(0, str(ROOT / "src"))
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--headless", action="store_true")
-    parser.add_argument("--layout", choices=("large", "demo"), default="large")
+    parser.add_argument("--layout", choices=("robotic", "large", "demo"), default="robotic")
+    parser.add_argument("--minimal", action="store_true", help="Skip rendering for physics checks")
+    parser.add_argument(
+        "--record", action="store_true", help="Capture robot motion frames at 10 fps"
+    )
     parser.add_argument("--duration", type=float, default=240)
     parser.add_argument(
         "--continuous", action="store_true", help="Feed until drained from the panel"
@@ -43,7 +47,18 @@ def parse_args():
 def start_app():
     args = parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    for name in ("summary.json", "live.json", "Camera.png", "FloorCamera.png", "RepairCamera.png"):
+    if args.record:
+        for frame in (args.output / "motion").glob("[0-9][0-9][0-9][0-9].png"):
+            frame.unlink()
+    for name in (
+        "summary.json",
+        "live.json",
+        "Camera.png",
+        "FloorCamera.png",
+        "RepairCamera.png",
+        "RobotCamera.png",
+        "ShippingCamera.png",
+    ):
         (args.output / name).unlink(missing_ok=True)
 
     from isaacsim import SimulationApp
@@ -56,11 +71,23 @@ def start_app():
             "multi_gpu": False,
             "anti_aliasing": 0,
             "extra_args": ["--enable", "isaacsim.core.api"],
+            **(
+                {"renderer": "MinimalRendering", "disable_viewport_updates": True}
+                if args.minimal
+                else {}
+            ),
         }
     )
     exit_code = 1
     try:
-        if args.layout == "large":
+        if args.layout == "robotic":
+            import omni.kit.app
+
+            omni.kit.app.get_app().get_extension_manager().set_extension_enabled_immediate(
+                "isaacsim.robot_motion.examples", True
+            )
+            from robot_run import main
+        elif args.layout == "large":
             from large_run import main
         else:
             from factory_run import main

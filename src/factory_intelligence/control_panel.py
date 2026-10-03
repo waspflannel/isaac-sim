@@ -103,11 +103,13 @@ class ControlPanel:
             if command.get("drain"):
                 factory.running = False
 
-    def publish(self, factory, scene):
+    def publish(self, factory, scene, robots=None, rendering=True):
         self.snapshot = {
             **factory.snapshot(),
             "status": "running" if factory.running else "draining",
             "transport_speed": scene.speed,
+            "robots": robots or {},
+            "rendering": rendering,
         }
 
     def close(self):

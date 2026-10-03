@@ -1,3 +1,9 @@
+# Controller composition adapted from NVIDIA's pick_place.py example.
+# Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+# License copy: licenses/NVIDIA-example-Apache-2.0.txt
+# Modified to bind authored cells, queue production work, and verify handoffs.
+
 """A production handoff completes only after the robot places the real rigid body.
 
 Uses Isaac 6.1's ManipulationScenario and composable pick/place controllers.
@@ -156,9 +162,12 @@ class RobotCell:
                 self.job = None
 
     def snapshot(self):
+        phase = "IDLE"
+        if self.job:
+            phase = "SETTLING" if self.controller.is_done else self.controller.phase.name
         return {
             "completed": self.completed,
             "attachments": self.attachments,
             "queued": len(self.waiting),
-            "phase": self.controller.phase.name if self.job else "IDLE",
+            "phase": phase,
         }

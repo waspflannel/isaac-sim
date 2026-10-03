@@ -31,9 +31,9 @@ def main(app):
         prim.GetReferences().AddReference(str(Path(__file__).parent / "scenes/robot_cell.usda"))
         UsdGeom.Xformable(prim).AddTranslateOp().Set(Gf.Vec3d(*offset))
         item_path = root + "/Item"
-        pick = [offset[0] + 0.45, offset[1], 0.84]
+        pick = [offset[0] + 0.45, offset[1], -5]
         Cube(item_path, positions=[pick], sizes=0.08, colors=[[0.95, 0.5, 0.1]])
-        RigidPrim(item_path)
+        RigidPrim(item_path, masses=0.05)
         GeomPrim(item_path, apply_collision_apis=True)
     for index in range(2):
         root = f"/World/Cell{index}"
@@ -44,7 +44,22 @@ def main(app):
         )
     app.update()
     app_utils.play()
+    app.update()
+    for cell in cells:
+        cell.scenario.articulation.reset_to_default_state()
     for _ in range(30):
+        app.update()
+    # Supply the items after parking the arms, as the production feeder does.
+    for cell in cells:
+        target = (
+            UsdGeom.XformCache()
+            .GetLocalToWorldTransform(stage.GetPrimAtPath(cell.path + "/Input"))
+            .ExtractTranslation()
+        )
+        body = RigidPrim(cell.path + "/Item")
+        body.set_world_poses(positions=[list(target)])
+        body.set_velocities([[0, 0, 0]], [[0, 0, 0]])
+    for _ in range(15):
         app.update()
 
     def cycle(cell):
