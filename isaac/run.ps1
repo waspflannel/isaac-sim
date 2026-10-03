@@ -1,7 +1,14 @@
 param(
     [ValidateSet('check', 'smoke', 'gui', 'factory')]
     [string]$Mode = 'smoke',
-    [switch]$Headless
+    [switch]$Headless,
+    [switch]$Continuous,
+    [switch]$Realtime,
+    [ValidateSet('robotic', 'large', 'demo')]
+    [string]$Layout = 'robotic',
+    [double]$Duration = 120,
+    [switch]$Minimal,
+    [switch]$Record
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,8 +26,12 @@ try {
         }
         'gui' { & '.\isaac-sim.bat' }
         'factory' {
-            $factoryArgs = @((Join-Path $PSScriptRoot 'factory.py'))
+            $factoryArgs = @((Join-Path $PSScriptRoot 'factory.py'), '--layout', $Layout, '--duration', $Duration)
             if ($Headless) { $factoryArgs += '--headless' }
+            if ($Continuous) { $factoryArgs += '--continuous' }
+            if ($Realtime) { $factoryArgs += '--realtime' }
+            if ($Minimal) { $factoryArgs += '--minimal' }
+            if ($Record) { $factoryArgs += '--record' }
             & '.\python.bat' @factoryArgs
         }
     }
