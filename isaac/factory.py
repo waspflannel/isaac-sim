@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument("--transport-speed", type=float, default=4.0)
     parser.add_argument("--max-seconds", type=float, default=1500)
     parser.add_argument("--output", type=Path, default=ROOT / ".data" / "isaac" / "factory")
+    parser.add_argument("--journal", type=Path, default=ROOT / ".data" / "edge" / "source")
     args = parser.parse_args()
     if not 1 <= args.dashboard_port <= 65535:
         parser.error("Dashboard port must be between 1 and 65535")

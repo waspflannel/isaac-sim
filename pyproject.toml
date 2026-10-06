@@ -8,12 +8,14 @@ dependencies = [
   "uvicorn[standard]>=0.34,<1",
   "psycopg[binary]>=3.2,<4",
   "simpy>=4.1,<5",
+  "pydantic>=2.10,<3",
 ]
 
 [project.scripts]
 factory-base = "factory_intelligence.main:main"
 factory-simulate = "factory_intelligence.simulator:main"
 factory-collect = "factory_intelligence.collector:main"
+factory-edge = "factory_intelligence.edge.cli:main"
 
 [dependency-groups]
 dev = ["httpx>=0.28,<1", "pytest>=8,<10", "ruff>=0.11,<1"]
